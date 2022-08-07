@@ -14,19 +14,16 @@
 {-# LANGUAGE FlexibleInstances          #-}
 module Models where
 
-import Database.Persist
 import Database.Persist.Sqlite
 import Database.Persist.TH
 
-import Control.Monad.IO.Class(liftIO)
-
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Person
+Person json
     name String
     age Int
     deriving Show
-Car
+Car json
     color String
     make String
     model String

@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Core where
 
-import Utils(ci, toBytes)
+import Utils(ci, toBytes, serializeMany)
 
 import Data.Aeson
 import Control.Exception(SomeException(..), catch)
@@ -15,7 +15,7 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.UTF8 as U
 import Control.Monad.State
-import Data.Text(Text, unpack)
+import Data.Text(Text, unpack, pack)
 import Text.Read(readMaybe)
 import Data.Map.Strict(Map)
 import qualified Data.Map as M
@@ -33,8 +33,8 @@ import Network.Wai
 import qualified Data.CaseInsensitive as CI
 import Network.Wai.Parse
 import Network.HTTP.Types (
-    ResponseHeaders, Status, status200, status302, hLocation, internalServerError500,
-    HeaderName
+    ResponseHeaders, Status, status200, status302, status400,
+    hLocation, internalServerError500, HeaderName
   )
 import Database.Persist.Sqlite
 
@@ -46,6 +46,8 @@ data RequestData = RequestData
     , postParams :: Params
     , connPool :: ConnectionPool
     }
+
+type Decoder a = B.ByteString -> Result a
 
 data ResponseState = ResponseState
     { resStatus :: Status
@@ -64,9 +66,12 @@ data HandlerResult =
 
 type Handler a = ExceptT HandlerResult (ReaderT RequestData (StateT ResponseState IO)) a
 
+type URLPath = [Text]
+
 data Method = GET | POST | PUT | DELETE | OPTIONS | HEAD
     deriving (Show, Read)
-type Router = (Method, [Text]) -> Handler ()
+
+type Router = (Method, URLPath) -> Handler ()
 
 createRequestData :: Request -> ConnectionPool -> [Param] -> RequestData
 createRequestData req pool pParams = RequestData
@@ -145,6 +150,32 @@ setContentType = setHeader (ci "Content-Type")
 routerToApplication :: Router -> Text -> Application
 routerToApplication route dbName req respond = do
     let method = fromMaybe GET $ readMaybe @Method (unpack . TE.decodeUtf8 $ requestMethod req)
-    resp <- runHandler dbName req (route (method, pathInfo req))
-        `catch` \(e::SomeException) -> return $ responseLBS internalServerError500 [] BL.empty
-    respond resp
+        normalHandle = do
+            resp <- runHandler dbName req (route (method, pathInfo req))
+                `catch` \(e::SomeException) -> do
+                    print $ show e
+                    return $ responseLBS internalServerError500 [] BL.empty
+            respond resp
+    normalHandle
+
+withDeserializer :: (FromJSON a) => (a -> Handler ()) -> Handler ()
+withDeserializer handler = do
+    mval <- decode <$> body :: (Handler (Maybe Value))
+    case mval of
+      Nothing -> do
+          status status400 -- TODO: Show what errors/what fields missing
+          text "Not a JSON data"
+      Just val -> do
+          obj <- fromJSON <$> pure val
+          case obj of
+            Success a -> handler a
+            Error s -> do
+                status status400
+                text (pack s)
+
+withEntitySerializer :: (ToBackendKey SqlBackend a, ToJSON a) => Handler [Entity a] -> Handler ()
+withEntitySerializer h = do
+    entityItems <- h
+    status status200
+    setContentType "application/json"
+    rawBytes $ encode $ serializeMany entityItems

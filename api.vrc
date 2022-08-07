@@ -1,0 +1,12 @@
+POST http://localhost:3333/users
+
+Content-Type: application/json
+
+
+{
+    "name": "Test",
+    "age": "bibek"
+}
+
+
+GET http://localhost:3333/users

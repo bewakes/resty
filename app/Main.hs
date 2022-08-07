@@ -1,25 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Network.HTTP.Types(status200)
 import Network.Wai
 import Network.Wai.Handler.Warp(run)
 
 import Core
-import Utils(ci)
-import Db
 import Models
 
 import Handlers
 
 import Data.Text
-import qualified Data.CaseInsensitive as CI
-import Data.CaseInsensitive(CI)
-import Data.ByteString
-import qualified Data.ByteString.UTF8 as U
-import qualified Data.ByteString.Lazy.UTF8 as LU
 import Database.Persist.Sqlite
-import Database.Persist
 
 dbName :: Text
 dbName = "test.db"
@@ -33,8 +24,8 @@ app = routerToApplication myAppRouter
 myAppRouter :: Router
 myAppRouter path =
     case path of
-      (POST, ["users"]) -> addUserHandler
-      (GET,["users"]) -> showUserHandler
+      (POST, ["users"]) -> withDeserializer addUserHandler
+      (GET, ["users"]) -> withEntitySerializer usersHandler
       _ -> notFound
 
 
