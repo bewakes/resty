@@ -52,7 +52,7 @@ library
     exposed-modules:
         Core
       , Utils
-      , RestController
+      , RestHandlers
       , Db
 
     -- Modules included in this library but not exported.
@@ -62,6 +62,8 @@ library
     default-extensions:
           OverloadedStrings
         , TypeApplications
+        , RankNTypes
+        , QuantifiedConstraints
 
     -- Other library packages from which modules are imported.
     build-depends:
@@ -107,6 +109,8 @@ executable mango-rest-framework
     default-extensions:
           OverloadedStrings
         , TypeApplications
+        , RankNTypes
+        , QuantifiedConstraints
 
     -- Other library packages from which modules are imported.
     build-depends:

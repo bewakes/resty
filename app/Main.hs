@@ -7,8 +7,9 @@ import Network.Wai.Handler.Warp(run)
 import Core
 import Models
 
-import Handlers
+import RestHandlers
 
+import Data.Proxy
 import Data.Text
 import Database.Persist.Sqlite
 
@@ -24,8 +25,7 @@ app = routerToApplication myAppRouter
 myAppRouter :: Router
 myAppRouter path =
     case path of
-      (POST, ["users"]) -> withDeserializer addUserHandler
-      (GET, ["users"]) -> withEntitySerializer usersHandler
+      p@(_, "users":_) -> entityHandler (Proxy :: Proxy Person) p
       _ -> notFound
 
 

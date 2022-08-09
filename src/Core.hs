@@ -148,7 +148,7 @@ setContentType :: BL.ByteString -> Handler ()
 setContentType = setHeader (ci "Content-Type")
 
 routerToApplication :: Router -> Text -> Application
-routerToApplication route dbName req respond = do
+routerToApplication route dbName = \req respond -> do
     let method = fromMaybe GET $ readMaybe @Method (unpack . TE.decodeUtf8 $ requestMethod req)
         normalHandle = do
             resp <- runHandler dbName req (route (method, pathInfo req))
@@ -173,7 +173,7 @@ withDeserializer handler = do
                 status status400
                 text (pack s)
 
-withEntitySerializer :: (ToBackendKey SqlBackend a, ToJSON a) => Handler [Entity a] -> Handler ()
+withEntitySerializer :: (ToJSON a, ToBackendKey SqlBackend a) => Handler [Entity a] -> Handler ()
 withEntitySerializer h = do
     entityItems <- h
     status status200
