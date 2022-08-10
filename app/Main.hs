@@ -23,7 +23,8 @@ app = routerToApplication myAppRouter
 myAppRouter :: Router
 myAppRouter path =
     case path of
-      p@(_, "users":_) -> entityHandler @Person p
+      (_, "users":_) -> entityHandler @Person path
+      (_, "cars":_) -> entityHandler @Car path
       _ -> notFound
 
 

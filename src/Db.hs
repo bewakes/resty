@@ -19,6 +19,9 @@ selectDb :: (PersistEntity b, PersistEntityBackend b ~ SqlBackend) =>
     [Filter b] -> [SelectOpt b] -> Handler [Entity b]
 selectDb filters opts = runDb $ selectList filters opts
 
+getDb :: (PersistEntity b, PersistEntityBackend b ~ SqlBackend) => Key b -> Handler (Maybe b)
+getDb key = runDb $ get key
+
 insertDb :: (PersistEntity b, PersistEntityBackend b ~ SqlBackend) =>
     b -> Handler (Key b)
 insertDb e = runDb $ insert e
