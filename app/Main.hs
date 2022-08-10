@@ -9,7 +9,6 @@ import Models
 
 import RestHandlers
 
-import Data.Proxy
 import Data.Text
 import Database.Persist.Sqlite
 
@@ -21,11 +20,10 @@ dbName = "test.db"
 app :: Text -> Application
 app = routerToApplication myAppRouter
 
-
 myAppRouter :: Router
 myAppRouter path =
     case path of
-      p@(_, "users":_) -> entityHandler (Proxy :: Proxy Person) p
+      p@(_, "users":_) -> entityHandler @Person p
       _ -> notFound
 
 
