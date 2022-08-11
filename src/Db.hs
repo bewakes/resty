@@ -25,14 +25,3 @@ getDb key = runDb $ get key
 insertDb :: (PersistEntity b, PersistEntityBackend b ~ SqlBackend) =>
     b -> Handler (Key b)
 insertDb e = runDb $ insert e
-
-_testRunPersistent :: IO ()
-_testRunPersistent = do
-    pool <- makePool "test.db"
-    print ""
-    -- runDb 
-    {-
-    runSqlite ":memory:" $ do
-        insert $ Person "bibek" 10
-        liftIO $ print "done"
-    -}

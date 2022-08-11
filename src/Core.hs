@@ -179,3 +179,8 @@ withEntitySerializer h = do
     status status200
     setContentType "application/json"
     rawBytes $ encode $ serializeMany entityItems
+
+
+class Filterable a where
+    mkFilter :: Text -> Text -> [Filter a]
+    mkFilter _ _ = []

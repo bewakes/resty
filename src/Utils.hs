@@ -30,5 +30,3 @@ serializeMany objs = object
     [ "count" .= Prelude.length objs
     , "items" .= Array (V.fromList $ Prelude.map serialize objs)
     ]
-
-
