@@ -54,6 +54,7 @@ library
       , Utils
       , RestHandlers
       , Db
+      , CoreFilters
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -102,6 +103,7 @@ executable mango-rest-framework
           Handlers
         , Models
         , Serializers
+        , Filters
 
     ghc-options:
         -Wall

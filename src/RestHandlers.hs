@@ -16,6 +16,7 @@ import Database.Persist.Sql
 import Text.Read(readMaybe)
 
 import Core
+import CoreFilters
 import Db
 import Utils(serialize)
 
@@ -26,12 +27,11 @@ addHandler obj = do
     setContentType "application/json"
     rawBytes $ encode $ serialize (Entity uid obj)
 
-
 getFilterParams :: forall a.(Filterable a, PersistEntityBackend a ~ SqlBackend, PersistEntity a) => Handler [Filter a]
 getFilterParams = do
     qps <- asks queryParams
     let listqps = map (\(a, x:xs) -> (a, x)) $ filter (\(a, b) -> length b > 0) $ toList qps
-        filters = mconcat $ map (uncurry (mkFilter @a)) listqps
+        filters = mconcat $ map (uncurry mkFilter) listqps
     pure filters
 
 listHandler :: (Filterable a, ToJSON a, PersistEntityBackend a ~ SqlBackend, PersistEntity a) => Handler [Entity a]

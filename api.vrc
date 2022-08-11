@@ -10,3 +10,20 @@ Content-Type: application/json
 
 
 GET http://localhost:3333/users
+
+
+
+POST http://localhost:3333/cars
+
+Content-Type: application/json
+
+
+{
+    "name": "Electronic Vehicle 2",
+    "color": "gray",
+    "make": "2022",
+    "model": "Royal"
+}
+
+
+GET http://localhost:3333/caras/4
