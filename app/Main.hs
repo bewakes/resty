@@ -6,6 +6,7 @@ import Network.Wai.Handler.Warp(run)
 
 import Core
 import Models
+import Filters()
 
 import RestHandlers
 
@@ -23,8 +24,8 @@ app = routerToApplication myAppRouter
 myAppRouter :: Router
 myAppRouter path =
     case path of
-      (_, "users":_) -> entityHandler @Person path
-      (_, "cars":_) -> entityHandler @Car path
+      (_, "users":_) -> entityCRUDHandler @Person path
+      (_, "cars":_) -> entityCRUDHandler @Car path
       _ -> notFound
 
 
