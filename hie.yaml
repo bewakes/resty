@@ -1,10 +1,10 @@
 cradle:
   stack:
     - path: "./src"
-      component: "mango-web-framework:lib"
+      component: "resty:lib"
 
     - path: "./app/Main.hs"
-      component: "mango-web-framework:exe:mango-web-framework"
+      component: "resty:exe:resty"
 
     - path: "./test"
-      component: "mango-web-framework:test:mango-web-framework-test"
+      component: "resty:test:resty-test"

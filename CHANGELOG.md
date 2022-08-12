@@ -1,4 +1,4 @@
-# Revision history for mango-web-framework
+# Revision history for resty
 
 ## 0.1.0.0 -- YYYY-mm-dd
 
