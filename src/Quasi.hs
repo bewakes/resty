@@ -9,7 +9,6 @@ import Data.Text(unpack)
 
 import CoreFilters
 
-
 strEqClause :: String -> String -> Clause
 strEqClause key field = let x = mkName "x" in
     Clause
@@ -47,7 +46,33 @@ getStringClauses key field =
     , containsClause key field
     ]
 
-getIntClauses _ _ = []
+
+intOpClause :: String -> String -> String -> Name -> Clause
+intOpClause key field suffx op = let x = mkName "x" in
+    Clause
+        [LitP (StringL (key<>suffx)), VarP x]
+        (NormalB
+            (AppE
+                (AppE
+                    (AppE
+                        (VarE 'intFilter)
+                        (VarE x)
+                    )
+                    (ConE (mkName field))
+                )
+                (VarE op)
+            )
+        )
+        []
+
+getIntClauses :: String -> String -> [Clause]
+getIntClauses key field =
+    [ intOpClause key field "" '(==.)
+    , intOpClause key field "__lt" '(<.)
+    , intOpClause key field "__gt" '(>.)
+    , intOpClause key field "__lte" '(<=.)
+    , intOpClause key field "__gte" '(>=.)
+    ]
 
 instanceDecl :: String -> Q [Dec]
 instanceDecl name = [d|
@@ -61,7 +86,9 @@ toInstanceDecl (className, fieldsStrs) = do
     atype <- a
     pure $ [InstanceD Nothing [] (AppT (ConT ''Filterable) atype) [FunD (mkName "mkFilter") clauses]]
     where a = conT (mkName className)
-          clauses = mconcat $ Prelude.map getClauses fieldsStrs
+          defaultClause = [Clause [WildP,WildP] (NormalB (ConE '[])) []]
+          coreClauses = mconcat $ Prelude.map getClauses fieldsStrs
+          clauses = coreClauses ++ defaultClause
           getClauses s = let (k:f:t:[]) = Prelude.words s in
                              case t of
                                "String" -> getStringClauses k f
