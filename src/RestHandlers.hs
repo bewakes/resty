@@ -30,15 +30,14 @@ addHandler obj = do
 getFilterParams :: forall a.(Filterable a, PersistEntityBackend a ~ SqlBackend, PersistEntity a) => Handler [Filter a]
 getFilterParams = do
     qps <- asks queryParams
-    let listqps = map (\(a, x:xs) -> (a, x)) $ filter (\(a, b) -> length b > 0) $ toList qps
+    let listqps = map (\(a, x:xs) -> (a, x)) $ filter (\(a, b) -> not (null b)) $ toList qps
         filters = mconcat $ map (uncurry mkFilter) listqps
     pure filters
 
 listHandler :: (Filterable a, ToJSON a, PersistEntityBackend a ~ SqlBackend, PersistEntity a) => Handler [Entity a]
 listHandler = do
     filterParams <- getFilterParams
-    items <- runDb $ selectList filterParams []
-    return items
+    runDb $ selectList filterParams []
 
 retrieveHandler :: (ToBackendKey SqlBackend a, ToJSON a, PersistEntityBackend a ~ SqlBackend, PersistEntity a) => Key a -> Handler ()
 retrieveHandler key = do
@@ -67,9 +66,9 @@ entityCRUDHandler ::
     forall a. (Filterable a, FromJSON a, ToJSON a, ToBackendKey SqlBackend a, PersistEntityBackend a ~ SqlBackend, PersistEntity a)
       => (Method, URLPath) -> Handler ()
 entityCRUDHandler path = case path of
-    (POST, [_]) -> withDeserializer @a (addHandler)
-    (GET, [_]) -> withEntitySerializer @a (listHandler)
-    (GET, _:id:[]) -> do
+    (POST, [_]) -> withDeserializer @a addHandler
+    (GET, [_]) -> withEntitySerializer @a listHandler
+    (GET, [_, id]) -> do
         let mInt = readMaybe @Int64 (unpack id)
         case mInt of
           Nothing -> send405

@@ -148,7 +148,7 @@ setContentType :: BL.ByteString -> Handler ()
 setContentType = setHeader (ci "Content-Type")
 
 routerToApplication :: Router -> Text -> Application
-routerToApplication route dbName = \req respond -> do
+routerToApplication route dbName req respond = do
     let method = fromMaybe GET $ readMaybe @Method (unpack . TE.decodeUtf8 $ requestMethod req)
         normalHandle = do
             resp <- runHandler dbName req (route (method, pathInfo req))
@@ -166,7 +166,7 @@ withDeserializer handler = do
           status status400 -- TODO: Show what errors/what fields missing
           text "Not a JSON data"
       Just val -> do
-          obj <- fromJSON <$> pure val
+          let obj = fromJSON val
           case obj of
             Success a -> handler a
             Error s -> do
