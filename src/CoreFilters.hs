@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 module CoreFilters where
 
 import Database.Persist
@@ -18,6 +19,6 @@ intFilter txt field op = case readMaybe @f (unpack txt) of
                       Just i -> [op field i]
                       Nothing -> []
 
-
-icontains field val = [Filter field (FilterValue $ mconcat ["%", val, "%"]) (BackendSpecificFilter "ILIKE")]
-contains field val = [Filter field (FilterValue $ mconcat ["%", val, "%"]) (BackendSpecificFilter "LIKE")]
+icontains, contains :: EntityField e String -> Text -> [Filter e]
+icontains field val = [Filter field (FilterValue $ mconcat ["%", unpack val, "%"]) (BackendSpecificFilter "ILIKE")]
+contains field val = [Filter field (FilterValue $ mconcat ["%", unpack val, "%"]) (BackendSpecificFilter "LIKE")]
