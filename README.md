@@ -1,5 +1,5 @@
 ## resty
-Rest framework never got easier.
+Rest APIs never got easier.
 
 ### Motivation
 I've always been fascinated by the easiness of python, especially `django` and `django-rest-framework`.
@@ -63,6 +63,8 @@ myRouter path =
       (_, "cars":_) -> entityCRUDHandler @Car path
       _ -> notFound
 ```
+The `entityCRUDHandler` will generate handlers for GET and POST methods(for now). Custom handlers for routes can also be written.
+
 In order to use your models as above, they must be instances of `Filterable` (from CoreFilters). For now just do the following. Will discuss in detail later.
 ```haskell
 instance Filterable Person
@@ -124,8 +126,16 @@ Person
 ```
 Now you can have queries like: `GET /users?name__contains=bi&age__gte=25`.
 
+
+### Documentation
+to do
+
 ### TODO
 - [ ] `PUT` and `DELETE` handlers
+- [ ] Exception Handling
 - [ ] Authentication
+- [ ] Tests !!!
+- [ ] Custom customizable serializers. Currently only the persistent models are supported.
+- [ ] Documentation
 - [ ] Middlewares
 - [ ] Other cool features as required.
