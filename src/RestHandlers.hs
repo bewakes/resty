@@ -4,7 +4,7 @@
 {-# LANGUAGE GADTs #-}
 module RestHandlers where
 
-import Network.HTTP.Types(status201, status200, status404, status405)
+import Network.HTTP.Types(status201, status200, status404, status405, status204)
 
 import Control.Monad.Reader(liftIO, asks)
 import Data.Aeson
@@ -49,6 +49,16 @@ retrieveHandler key = do
         rawBytes $ encode $ serialize (Entity key item)
       Nothing -> send404
 
+deleteHandler :: forall a.(ToBackendKey SqlBackend a, ToJSON a, PersistEntityBackend a ~ SqlBackend, PersistEntity a) => Key a -> Handler ()
+deleteHandler key = do
+    mItem <- runDb $ get key
+    case mItem of
+      (Just item) -> do
+          runDb $ delete key
+          status status204
+          rawBytes ""
+      Nothing -> send404
+
 notFound :: Handler ()
 notFound = send404
 
@@ -62,15 +72,24 @@ send405 = do
     status status405
     text ""
 
-entityCRUDHandler ::
-    forall a. (Filterable a, FromJSON a, ToJSON a, ToBackendKey SqlBackend a, PersistEntityBackend a ~ SqlBackend, PersistEntity a)
-      => (Method, URLPath) -> Handler ()
+withIntToSqlKey
+    :: forall a.(Filterable a, FromJSON a, ToJSON a, ToBackendKey SqlBackend a, PersistEntityBackend a ~ SqlBackend, PersistEntity a)
+    => Text
+    -> (Key a -> Handler())
+    -> Handler()
+withIntToSqlKey idStr h = do
+        let mInt = readMaybe @Int64 (unpack idStr)
+        case mInt of
+          Nothing -> send405
+          Just int -> h $ toSqlKey @a int
+
+entityCRUDHandler
+    :: forall a. (Filterable a, FromJSON a, ToJSON a, ToBackendKey SqlBackend a, PersistEntityBackend a ~ SqlBackend, PersistEntity a)
+    => (Method, URLPath)
+    -> Handler ()
 entityCRUDHandler path = case path of
     (POST, [_]) -> withDeserializer @a addHandler
     (GET, [_]) -> withEntitySerializer @a listHandler
-    (GET, [_, id]) -> do
-        let mInt = readMaybe @Int64 (unpack id)
-        case mInt of
-          Nothing -> send405
-          (Just int) -> retrieveHandler $ toSqlKey @a int
+    (DELETE, [_,id]) -> withIntToSqlKey @a id deleteHandler
+    (GET, [_, id]) -> withIntToSqlKey @a id retrieveHandler
     _ -> send405
