@@ -72,6 +72,18 @@ send405 = do
     status status405
     text ""
 
+putHandler
+    :: forall a.(FromJSON a, ToJSON a, ToBackendKey SqlBackend a, PersistEntityBackend a ~ SqlBackend, PersistEntity a)
+    => a
+    -> (Key a -> Handler())
+putHandler obj key = do
+    mItem <- runDb $ get key
+    case mItem of
+      Nothing -> send404
+      Just item -> do
+          runDb $ repsert key obj
+
+
 withIntToSqlKey
     :: forall a.(Filterable a, FromJSON a, ToJSON a, ToBackendKey SqlBackend a, PersistEntityBackend a ~ SqlBackend, PersistEntity a)
     => Text
@@ -91,5 +103,11 @@ entityCRUDHandler path = case path of
     (POST, [_]) -> withDeserializer @a addHandler
     (GET, [_]) -> withEntitySerializer @a listHandler
     (DELETE, [_,id]) -> withIntToSqlKey @a id deleteHandler
+    (PUT, [_,id]) -> withDeserializer @a $ \obj -> do
+                                    withIntToSqlKey @a id $ \k -> do
+                                        putHandler obj k
+                                        status status200
+                                        setContentType "application/json"
+                                        rawBytes $ encode $ serialize (Entity k obj)
     (GET, [_, id]) -> withIntToSqlKey @a id retrieveHandler
     _ -> send405

@@ -131,7 +131,7 @@ Now you can have queries like: `GET /users?name__contains=bi&age__gte=25`.
 to do
 
 ### TODO
-- [ ] `PUT` and `DELETE` handlers
+- [x] `PUT` and `DELETE` handlers
 - [ ] Exception Handling
 - [ ] Authentication
 - [ ] Tests !!!
