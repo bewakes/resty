@@ -91,10 +91,14 @@ That's it! You can then have the following apis being served.
 GET /users
 GET /users/<id>
 POST /users
+PUT /users/<id>
+DELETE /users/<id>
 
 GET /cars
 GET /cars/<id>
 POST /cars
+PUT /cars/<id>
+DELETE /cars/<id>
 ```
 The list api will not have any filter capabilities now, for example: `GET /users?name=curry` will not filter users by name.
 In order to do so the `Filterable` instance that we declared above must be extended as:
